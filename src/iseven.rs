@@ -1,8 +1,11 @@
+//! Contains the response types.
+
 use std::fmt;
 use std::fmt::Formatter;
 
 use serde::Deserialize;
 
+/// Struct containing the return response from the API.
 #[derive(Deserialize, Debug)]
 pub struct IsEven {
     ad: String,
@@ -10,32 +13,29 @@ pub struct IsEven {
 }
 
 impl IsEven {
+    /// Returns `true` if the number is even.
     pub fn is_even(&self) -> bool {
         self.iseven
     }
 
+    /// Returns the ad message.
     pub fn ad(&self) -> &String {
         &self.ad
     }
 }
 
 
+/// Struct containing the error response from the API.
 #[derive(Deserialize, Debug)]
 pub struct IsEvenError {
     error: String,
 }
 
 impl IsEvenError {
+    /// Returns the error message.
     pub fn error_message(&self) -> &String {
         &self.error
     }
-}
-
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-pub enum IsEvenResponse {
-    Ok(IsEven),
-    Err(IsEvenError),
 }
 
 impl fmt::Display for IsEvenError {

@@ -3,12 +3,13 @@
 use std::fmt::Display;
 
 use num_traits::Num;
+use serde::Deserialize;
 
-use crate::iseven::{IsEven, IsEvenError, IsEvenResponse};
+use crate::iseven::{IsEven, IsEvenError};
 
-mod iseven;
+pub mod iseven;
 
-const API_URL: &str = "https://api.isevenapi.xyz/api/iseven";
+const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 
 /// sends a GET request to the isEven API for a given number. The return value includes the `bool`
 /// value of whether the number is even (`true` indicates an even number) as well as the
@@ -20,10 +21,9 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven";
 /// # Panics
 /// If there is an error in the request or parsing of the response.
 pub async fn iseven_get<T: Num + Display>(number: T) -> Result<IsEven, IsEvenError> {
-    let request_url = format!("{api_root}/{num}/", api_root = API_URL, num = number);
+    let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
-    let response = reqwest::get(&request_url).await;
-    match response {
+    match reqwest::get(&request_url).await {
         Ok(response) => {
             let iseven_instance: Result<IsEvenResponse, reqwest::Error> = response.json().await;
             match iseven_instance {
@@ -42,6 +42,14 @@ pub async fn iseven_get<T: Num + Display>(number: T) -> Result<IsEven, IsEvenErr
             panic!("Error in request: {}", e);
         }
     }
+}
+
+/// Enum of response types for serde
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum IsEvenResponse {
+    Ok(IsEven),
+    Err(IsEvenError),
 }
 
 #[cfg(test)]
