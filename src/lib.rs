@@ -2,7 +2,6 @@
 
 use std::fmt::Display;
 
-use num_traits::Num;
 use serde::Deserialize;
 
 use crate::iseven::{IsEven, IsEvenError};
@@ -17,10 +16,13 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 ///
 /// # Errors
 /// Returns an `Err` if the API request is successful but responded with an error.
+/// * If the number is outside the range for your [pricing plan](https://isevenapi.xyz/#pricing),
+/// it will return the `Number out of range` error as message.
+/// * If the input is not a valid number, It returns `Invalid number.` as the message.
 ///
 /// # Panics
 /// If there is an error in the request or parsing of the response.
-pub async fn iseven_get<T: Num + Display>(number: T) -> Result<IsEven, IsEvenError> {
+pub async fn iseven_get<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
     let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
     match reqwest::get(&request_url).await {
@@ -80,6 +82,14 @@ mod tests {
     async fn test_out_of_range() {
         let nums = [1000000, i32::MAX, -1];
         for &a in nums.iter() {
+            assert!(iseven_get(a).await.is_err());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_invalid_input() {
+        let values = ["abc", "1.0.0", "hello world", "3.14"];
+        for &a in values.iter() {
             assert!(iseven_get(a).await.is_err());
         }
     }
