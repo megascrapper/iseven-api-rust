@@ -1,4 +1,4 @@
-//! A Rust implementation of the [isEven API](https://isevenapi.xyz/).
+//! A Rust wrapper for [isEven API](https://isevenapi.xyz/).
 
 use std::fmt::Display;
 
