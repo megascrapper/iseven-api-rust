@@ -1,6 +1,7 @@
 //! A Rust implementation of the [isEven API](https://isevenapi.xyz/).
 
 use std::fmt::Display;
+
 use num_traits::Num;
 
 use crate::iseven::{IsEven, IsEvenError, IsEvenResponse};
