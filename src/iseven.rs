@@ -25,10 +25,6 @@ pub struct IsEvenError {
 }
 
 impl IsEvenError {
-    pub fn new(error: String) -> IsEvenError {
-        IsEvenError { error }
-    }
-
     pub fn error_message(&self) -> &String {
         &self.error
     }

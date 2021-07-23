@@ -1,3 +1,5 @@
+//! A Rust implementation of the [isEven API](https://isevenapi.xyz/).
+
 use std::fmt::Display;
 use num_traits::Num;
 
@@ -7,6 +9,15 @@ mod iseven;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven";
 
+/// sends a GET request to the isEven API for a given number. The return value includes the `bool`
+/// value of whether the number is even (`true` indicates an even number) as well as the
+/// advertisement.
+///
+/// # Errors
+/// Returns an `Err` if the API request is successful but responded with an error.
+///
+/// # Panics
+/// If there is an error in the request or parsing of the response.
 pub async fn iseven_get<T: Num + Display>(number: T) -> Result<IsEven, IsEvenError> {
     let request_url = format!("{api_root}/{num}/", api_root = API_URL, num = number);
 
