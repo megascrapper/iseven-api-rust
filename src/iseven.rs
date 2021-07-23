@@ -1,4 +1,6 @@
 use serde::Deserialize;
+use std::fmt;
+use std::fmt::Formatter;
 
 #[derive(Deserialize, Debug)]
 pub struct IsEven {
@@ -37,5 +39,11 @@ impl IsEvenError {
 pub enum IsEvenResponse {
     Ok(IsEven),
     Err(IsEvenError)
+}
+
+impl fmt::Display for IsEvenError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.error)
+    }
 }
 
