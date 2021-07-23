@@ -32,3 +32,10 @@ impl IsEvenError {
     }
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+pub enum IsEvenResponse {
+    Ok(IsEven),
+    Err(IsEvenError)
+}
+
