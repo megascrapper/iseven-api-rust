@@ -1,6 +1,6 @@
 use iseven_api::iseven_get;
 
-const USAGE_MSG: &str = "Usage: iseven_api [number]";
+const USAGE_MSG: &str = "Usage: iseven_api [integer]";
 
 #[tokio::main]
 async fn main() {
