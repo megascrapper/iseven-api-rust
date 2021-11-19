@@ -19,7 +19,7 @@ impl IsEven {
     }
 
     /// Returns the ad message.
-    pub fn ad(&self) -> &String {
+    pub fn ad(&self) -> &str {
         &self.ad
     }
 }
@@ -33,7 +33,7 @@ pub struct IsEvenError {
 
 impl IsEvenError {
     /// Returns the error message.
-    pub fn error_message(&self) -> &String {
+    pub fn error_message(&self) -> &str {
         &self.error
     }
 }
