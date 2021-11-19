@@ -23,13 +23,13 @@ error_chain! {
 /// advertisement.
 ///
 /// # Errors
-/// Returns an `Err` if the API request is successful but responded with an error.
+/// Returns an `Err` if either the API request responded with an error or there is an error in the
+/// request or parsing of the response.
+///
 /// * If the number is outside the range for your [pricing plan](https://isevenapi.xyz/#pricing),
 /// it will return the `Number out of range` error as message.
 /// * If the input is not a valid number, It returns `Invalid number.` as the message.
-///
-/// # Panics
-/// If there is an error in the request or parsing of the response.
+/// * If the error is in the request [`reqwest::Error`] is returned.
 pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
     let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
