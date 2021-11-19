@@ -26,7 +26,7 @@ impl IsEven {
 
 
 /// Struct containing the error response from the API.
-#[derive(Deserialize, Debug)]
+#[derive(thiserror::Error, Deserialize, Debug)]
 pub struct IsEvenError {
     error: String,
 }

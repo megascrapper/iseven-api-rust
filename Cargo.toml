@@ -9,3 +9,6 @@ edition = "2018"
 reqwest = { version = "0.11.4", features = ["json"] }
 serde = { version = "1.0.126", features = ["derive"] }
 tokio = { version = "1.9.0", features = ["macros", "rt-multi-thread"] }
+error-chain = "0.12.4"
+thiserror = "1.0.30"
+ansi_term = "0.12.1"

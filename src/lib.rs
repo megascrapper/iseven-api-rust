@@ -3,12 +3,20 @@
 use std::fmt::Display;
 
 use serde::Deserialize;
+use error_chain::error_chain;
 
 use crate::iseven::{IsEven, IsEvenError};
 
 pub mod iseven;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
+
+error_chain! {
+    foreign_links {
+        Reqwest(reqwest::Error);
+        IsEven(IsEvenError);
+    }
+}
 
 /// sends a GET request to the isEven API for a given number. The return value includes the `bool`
 /// value of whether the number is even (`true` indicates an even number) as well as the
@@ -22,27 +30,12 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 ///
 /// # Panics
 /// If there is an error in the request or parsing of the response.
-pub async fn iseven_get<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
+pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
     let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
-    match reqwest::get(&request_url).await {
-        Ok(response) => {
-            let iseven_instance: Result<IsEvenResponse, reqwest::Error> = response.json().await;
-            match iseven_instance {
-                Ok(iseven_instance) => {
-                    match iseven_instance {
-                        IsEvenResponse::Ok(r) => Ok(r),
-                        IsEvenResponse::Err(e) => Err(e)
-                    }
-                }
-                Err(e) => {
-                    panic!("Could not process response: {}", e);
-                }
-            }
-        }
-        Err(e) => {
-            panic!("Error in request: {}", e);
-        }
+    match reqwest::get(&request_url).await?.json().await? {
+        IsEvenResponse::Ok(r) => Ok(r),
+        IsEvenResponse::Err(e) => Err(e.into())
     }
 }
 
