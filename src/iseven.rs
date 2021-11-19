@@ -6,7 +6,7 @@ use std::fmt::Formatter;
 use serde::Deserialize;
 
 /// Struct containing the return response from the API.
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct IsEven {
     ad: String,
     iseven: bool,
@@ -26,7 +26,7 @@ impl IsEven {
 
 
 /// Struct containing the error response from the API.
-#[derive(thiserror::Error, Deserialize, Debug)]
+#[derive(thiserror::Error, Deserialize, Debug, Clone)]
 pub struct IsEvenError {
     error: String,
 }
