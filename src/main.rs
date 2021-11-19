@@ -11,7 +11,7 @@ async fn main() {
 
     let argv = std::env::args().collect::<Vec<_>>();
     if argv.len() != 2 {
-        eprintln!("{}", USAGE_MSG);
+        eprintln!("{} {}", Red.paint("error:"), USAGE_MSG);
     } else {
         let num = &argv[1];
         match iseven_get(num).await {
