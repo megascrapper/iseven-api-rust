@@ -1,6 +1,6 @@
 [package]
 name = "iseven_api"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -12,3 +12,4 @@ tokio = { version = "1.9.0", features = ["macros", "rt-multi-thread"] }
 error-chain = "0.12.4"
 thiserror = "1.0.30"
 ansi_term = "0.12.1"
+human-panic = "1.0.3"

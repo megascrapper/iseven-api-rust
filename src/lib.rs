@@ -2,8 +2,8 @@
 
 use std::fmt::Display;
 
-use serde::Deserialize;
 use error_chain::error_chain;
+use serde::Deserialize;
 
 use crate::iseven::{IsEven, IsEvenError};
 

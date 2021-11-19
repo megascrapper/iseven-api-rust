@@ -1,4 +1,5 @@
 use ansi_term::Colour::Red;
+use human_panic::setup_panic;
 
 use iseven_api::iseven_get;
 
@@ -6,6 +7,8 @@ const USAGE_MSG: &str = "Usage: iseven_api [integer]";
 
 #[tokio::main]
 async fn main() {
+    setup_panic!();
+
     let argv = std::env::args().collect::<Vec<_>>();
     if argv.len() != 2 {
         eprintln!("{}", USAGE_MSG);
