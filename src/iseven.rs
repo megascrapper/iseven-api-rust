@@ -1,7 +1,6 @@
 //! Contains the response types.
 
-use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter, write};
 
 use serde::Deserialize;
 
@@ -14,7 +13,7 @@ pub struct IsEven {
 
 impl IsEven {
     /// Returns `true` if the number is even.
-    pub fn is_even(&self) -> bool {
+    pub fn iseven(&self) -> bool {
         self.iseven
     }
 
@@ -24,23 +23,21 @@ impl IsEven {
     }
 }
 
+impl Display for IsEven {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", if self.iseven {"even"} else {"odd"})
+    }
+}
+
 
 /// Struct containing the error response from the API.
 #[derive(thiserror::Error, Deserialize, Debug, Clone)]
+#[error("{}", self.error)]
 pub struct IsEvenError {
     error: String,
 }
 
 impl IsEvenError {
     /// Returns the error message.
-    pub fn error_message(&self) -> &str {
-        &self.error
-    }
+    pub fn error(&self) -> &str { &self.error }
 }
-
-impl fmt::Display for IsEvenError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.error)
-    }
-}
-

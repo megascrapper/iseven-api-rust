@@ -17,7 +17,7 @@ async fn main() {
         match iseven_get(num).await {
             Ok(response) => {
                 println!("Advertisement: {}", response.ad());
-                println!("{} is an {} number", num, if response.is_even() { "even" } else { "odd" })
+                println!("{} is an {} number", num, if response.iseven() { "even" } else { "odd" })
             }
             Err(e) => eprintln!("{} {}", Red.paint("error:"), e)
         }
