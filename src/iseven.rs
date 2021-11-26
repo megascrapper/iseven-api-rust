@@ -1,6 +1,6 @@
 //! Contains the response types.
 
-use std::fmt::{Display, Formatter, write};
+use std::fmt::{Display, Formatter};
 
 use serde::Deserialize;
 
