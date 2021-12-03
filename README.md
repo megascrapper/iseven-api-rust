@@ -1,6 +1,5 @@
 # iseven_api
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/megascrapper/iseven-api-rust/Rust)
 ![Crates.io](https://img.shields.io/crates/v/iseven_api)
 
 A Rust wrapper for [isEven API](https://isevenapi.xyz/).
