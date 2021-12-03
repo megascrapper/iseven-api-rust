@@ -6,6 +6,8 @@ license = "MIT OR Apache-2.0"
 description = "A Rust wrapper for isEven API"
 homepage = "https://github.com/megascrapper/iseven-api-rust"
 repository = "https://github.com/megascrapper/iseven-api-rust"
+categories = ["api-bindings", "mathematics"]
+keywords = ["iseven", "is-even", "api", "silly-things"]
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

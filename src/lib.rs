@@ -2,7 +2,7 @@
 //!
 //! # Examples
 //! A simple commandline app from [`main.rs`](https://github.com/megascrapper/iseven-api-rust/blob/master/src/main.rs):
-//! ```
+//! ```no_run
 //! use ansi_term::Colour::Red;
 //! use human_panic::setup_panic;
 //! 
@@ -35,7 +35,7 @@
 //! error-chain = "0.12.4"
 //! ansi_term = "0.12.1"
 //! human-panic = "1.0.3"
-//! iseven_api = "0.4.0"
+//! iseven_api = "0.4.2"
 //! ```
 
 use std::fmt::Display;
@@ -97,6 +97,17 @@ pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
 ///
 /// # Panics
 /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
+///
+/// ``` should_panic
+/// # use std::error::Error;
+/// # use iseven_api::iseven_get_blocking;
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn Error>> {
+///     let even_num = iseven_get_blocking(42)?;
+///
+///     Ok(())
+/// }
+/// ```
 ///
 /// # Examples
 /// ```
