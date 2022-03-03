@@ -1,59 +1,25 @@
 //! A Rust wrapper for [isEven API](https://isevenapi.xyz/).
 //!
-//! # Examples
-//! A simple commandline app from [`main.rs`](https://github.com/megascrapper/iseven-api-rust/blob/master/src/main.rs):
-//! ```no_run
-//! use ansi_term::Colour::Red;
-//! use human_panic::setup_panic;
-//! 
-//! use iseven_api::iseven_get;
-//! 
-//! const USAGE_MSG: &str = "Usage: iseven_api [integer]";
-//! 
-//! #[tokio::main]
-//! async fn main() {
-//!     setup_panic!();
-//! 
-//!     let argv = std::env::args().collect::<Vec<_>>();
-//!     if argv.len() != 2 {
-//!         eprintln!("{} {}", Red.paint("error:"), USAGE_MSG);
-//!     } else {
-//!         let num = &argv[1];
-//!         match iseven_get(num).await {
-//!             Ok(response) => {
-//!                 println!("Advertisement: {}", response.ad());
-//!                 println!("{} is an {} number", num, if response.iseven() { "even" } else { "odd" })
-//!             }
-//!             Err(e) => eprintln!("{} {}", Red.paint("error:"), e)
-//!         }
-//!     }
-//! }
-//! ```
-//! 
-//! Cargo.toml:
-//! ```toml
-//! error-chain = "0.12.4"
-//! ansi_term = "0.12.1"
-//! human-panic = "1.0.3"
-//! iseven_api = "0.4.2"
-//! ```
+//! Includes the library as well as a simple command line app.
 
 use std::fmt::Display;
 
-use error_chain::error_chain;
 use serde::Deserialize;
 
-use crate::iseven::{IsEven, IsEvenError};
+pub use crate::iseven::{ErrorResponse, IsEven};
 
 pub mod iseven;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 
-error_chain! {
-    foreign_links {
-        Reqwest(reqwest::Error);
-        IsEven(IsEvenError);
-    }
+/// An error type containing errors which can result from the API call.
+#[derive(thiserror::Error, Debug)]
+pub enum IsEvenError {
+    /// Error in making API request
+    #[error("network error: {0}")]
+    NetworkError(#[from] reqwest::Error),
+    #[error(transparent)]
+    ErrorResponse(#[from] ErrorResponse),
 }
 
 /// sends a GET request to the isEven API for a given number. The return value includes the `bool`
@@ -61,7 +27,7 @@ error_chain! {
 /// advertisement.
 ///
 /// # Errors
-/// Returns an `Err` if either the API request responded with an error or there is an error in the
+/// Returns an [`IsEvenError`] if either the API request responded with an error or there is an error in the
 /// request or parsing of the response.
 ///
 /// * If the number is outside the range for your [pricing plan](https://isevenapi.xyz/#pricing),
@@ -71,25 +37,26 @@ error_chain! {
 ///
 /// # Examples
 /// ```
-/// use std::error::Error;
-/// use iseven_api::iseven_get;
-/// #[tokio::main]
-/// async fn main() -> Result<(), Box<dyn Error>> {
-///     let odd_num = iseven_get(41).await?;
-///     let even_num = iseven_get(42).await?;
+/// # use std::error::Error;
+///  use iseven_api::iseven_get;
 ///
-///     assert!(!odd_num.iseven());
-///     assert!(even_num.iseven());
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn Error>> {
+///  let odd_num = iseven_get(41).await?;
+///  let even_num = iseven_get(42).await?;
 ///
-///     Ok(())
-/// }
+///  assert!(!odd_num.iseven());
+///  assert!(even_num.iseven());
+/// #
+/// #   Ok(())
+/// # }
 /// ```
-pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
+pub async fn iseven_get<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
     let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
     match reqwest::get(&request_url).await?.json().await? {
         IsEvenResponse::Ok(r) => Ok(r),
-        IsEvenResponse::Err(e) => Err(e.into())
+        IsEvenResponse::Err(e) => Err(e.into()),
     }
 }
 
@@ -99,8 +66,8 @@ pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
 /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
 ///
 /// ``` should_panic
-/// # use std::error::Error;
-/// # use iseven_api::iseven_get_blocking;
+///  use std::error::Error;
+///  use iseven_api::iseven_get_blocking;
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn Error>> {
 ///     let even_num = iseven_get_blocking(42)?;
@@ -111,24 +78,25 @@ pub async fn iseven_get<T: Display>(number: T) -> crate::Result<IsEven> {
 ///
 /// # Examples
 /// ```
-/// use std::error::Error;
+/// # use std::error::Error;
 /// use iseven_api::iseven_get_blocking;
-/// fn main() -> Result<(), Box<dyn Error>> {
-///     let odd_num = iseven_get_blocking(41)?;
-///     let even_num = iseven_get_blocking(42)?;
 ///
-///     assert!(!odd_num.iseven());
-///     assert!(even_num.iseven());
+/// # fn main() -> Result<(), Box<dyn Error>> {
+///  let odd_num = iseven_get_blocking(41)?;
+///  let even_num = iseven_get_blocking(42)?;
 ///
-///     Ok(())
-/// }
+///  assert!(!odd_num.iseven());
+///  assert!(even_num.iseven());
+/// #
+/// #    Ok(())
+/// # }
 /// ```
-pub fn iseven_get_blocking<T: Display>(number: T) -> crate::Result<IsEven> {
+pub fn iseven_get_blocking<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
     let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
     match reqwest::blocking::get(&request_url)?.json()? {
         IsEvenResponse::Ok(r) => Ok(r),
-        IsEvenResponse::Err(e) => Err(e.into())
+        IsEvenResponse::Err(e) => Err(e.into()),
     }
 }
 
@@ -137,7 +105,7 @@ pub fn iseven_get_blocking<T: Display>(number: T) -> crate::Result<IsEven> {
 #[serde(untagged)]
 enum IsEvenResponse {
     Ok(IsEven),
-    Err(IsEvenError),
+    Err(ErrorResponse),
 }
 
 #[cfg(test)]
