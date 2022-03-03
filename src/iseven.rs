@@ -25,19 +25,20 @@ impl IsEven {
 
 impl Display for IsEven {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", if self.iseven {"even"} else {"odd"})
+        write!(f, "{}", if self.iseven { "even" } else { "odd" })
     }
 }
-
 
 /// Struct containing the error response from the API.
 #[derive(thiserror::Error, Deserialize, Debug, Clone)]
 #[error("{}", self.error)]
-pub struct IsEvenError {
+pub struct ErrorResponse {
     error: String,
 }
 
-impl IsEvenError {
+impl ErrorResponse {
     /// Returns the error message.
-    pub fn error(&self) -> &str { &self.error }
+    pub fn error(&self) -> &str {
+        &self.error
+    }
 }
