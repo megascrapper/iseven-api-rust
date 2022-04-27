@@ -54,15 +54,15 @@ impl IsEven {
     /// # Examples
     /// ```
     /// # use std::error::Error;
-    ///  use iseven_api::IsEven;
+    /// use iseven_api::IsEven;
     ///
     /// # #[tokio::main]
     /// # async fn main() -> Result<(), Box<dyn Error>> {
-    ///  let odd_num = IsEven::get(41).await?;
-    ///  let even_num = IsEven::get(42).await?;
+    /// let odd_num = IsEven::get(41).await?;
+    /// let even_num = IsEven::get(42).await?;
     ///
-    ///  assert!(!odd_num.iseven());
-    ///  assert!(even_num.iseven());
+    /// assert!(!odd_num.iseven());
+    /// assert!(even_num.iseven());
     /// #
     /// #   Ok(())
     /// # }
@@ -72,7 +72,10 @@ impl IsEven {
     }
 
     /// sends a GET request to the isEven API for a given number, using a supplied [`reqwest::Client`].
-    pub async fn with_client<T: Display>(number: T, client: reqwest::Client) -> Result<IsEven, IsEvenError> {
+    pub async fn with_client<T: Display>(
+        number: T,
+        client: reqwest::Client,
+    ) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
         match client.get(&request_url).send().await?.json().await? {
@@ -91,8 +94,8 @@ impl IsEven {
     /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
     ///
     /// ``` should_panic
-    ///  use std::error::Error;
-    ///  use iseven_api::IsEven;
+    /// use std::error::Error;
+    /// use iseven_api::IsEven;
     /// #[tokio::main]
     /// async fn main() -> Result<(), Box<dyn Error>> {
     ///     let even_num = IsEven::get_blocking(42)?;
@@ -107,11 +110,11 @@ impl IsEven {
     /// use iseven_api::IsEven;
     ///
     /// # fn main() -> Result<(), Box<dyn Error>> {
-    ///  let odd_num = IsEven::get_blocking(41)?;
-    ///  let even_num = IsEven::get_blocking(42)?;
+    /// let odd_num = IsEven::get_blocking(41)?;
+    /// let even_num = IsEven::get_blocking(42)?;
     ///
-    ///  assert!(!odd_num.iseven());
-    ///  assert!(even_num.iseven());
+    /// assert!(!odd_num.iseven());
+    /// assert!(even_num.iseven());
     /// #
     /// #    Ok(())
     /// # }
@@ -121,7 +124,10 @@ impl IsEven {
     }
 
     /// sends a blocking GET request to the isEven API for a given number, using a supplied [`reqwest::blocking::Client`].
-    pub fn with_client_blocking<T: Display>(number: T, client: reqwest::blocking::Client) -> Result<IsEven, IsEvenError> {
+    pub fn with_client_blocking<T: Display>(
+        number: T,
+        client: reqwest::blocking::Client,
+    ) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
 
         match client.get(&request_url).send()?.json()? {
@@ -129,7 +135,6 @@ impl IsEven {
             IsEvenResponse::Err(e) => Err(e.into()),
         }
     }
-
 
     /// Returns `true` if the number is even.
     pub fn iseven(&self) -> bool {

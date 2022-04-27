@@ -25,7 +25,7 @@ async fn main() {
             Err(e) => {
                 eprintln!("{} {}", Red.paint("error:"), e);
                 exit(1);
-            },
+            }
         }
     }
 }
