@@ -8,6 +8,13 @@ use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 
+/// Checks if a number is even.
+///
+/// **Note:** this method will panic if it encounters an error.
+pub fn is_even<T: Display>(number: T) -> bool {
+    IsEven::get_blocking(number).unwrap().iseven()
+}
+
 /// An error type containing errors which can result from the API call.
 #[derive(thiserror::Error, Debug)]
 pub enum IsEvenError {
