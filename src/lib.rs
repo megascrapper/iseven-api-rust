@@ -59,7 +59,7 @@ impl IsEven {
     /// * If the error is in the request [`reqwest::Error`] is returned.
     ///
     /// # Examples
-    /// ```
+    /// ```no_run
     /// # use std::error::Error;
     /// use iseven_api::IsEven;
     ///
@@ -100,7 +100,7 @@ impl IsEven {
     /// # Panics
     /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
     ///
-    /// ``` should_panic
+    /// ``` should_panic,no_run
     /// use std::error::Error;
     /// use iseven_api::IsEven;
     /// #[tokio::main]
@@ -112,7 +112,7 @@ impl IsEven {
     /// ```
     ///
     /// # Examples
-    /// ```
+    /// ```no_run
     /// # use std::error::Error;
     /// use iseven_api::IsEven;
     ///
