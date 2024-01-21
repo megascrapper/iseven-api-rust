@@ -15,6 +15,13 @@ pub fn is_even<T: Display>(number: T) -> bool {
     IsEven::get_blocking(number).unwrap().iseven()
 }
 
+/// Checks if a number is odd.
+///
+/// **Note:** this method will panic if it encounters an error.
+pub fn is_odd<T: Display>(number: T) -> bool {
+    !is_even(number)
+}
+
 /// An error type containing errors which can result from the API call.
 #[derive(thiserror::Error, Debug)]
 pub enum IsEvenError {
@@ -151,6 +158,11 @@ impl IsEven {
     /// Returns the ad message.
     pub fn ad(&self) -> &str {
         &self.ad
+    }
+
+    /// Returns `true` if the number is odd.
+    pub fn isodd(&self) -> bool {
+        !self.iseven()
     }
 }
 
