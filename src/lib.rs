@@ -4,6 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
+use reqwest::StatusCode;
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
@@ -25,17 +26,21 @@ pub fn is_odd<T: Display>(number: T) -> bool {
 /// An error type containing errors which can result from the API call.
 #[derive(thiserror::Error, Debug)]
 pub enum IsEvenError {
+    #[error(transparent)]
+    NumberOutOfRange(ErrorResponse),
+    #[error(transparent)]
+    InvalidNumber(ErrorResponse),
+    #[error("Server returned status code {1}: {0}")]
+    UnknownErrorResponse(ErrorResponse, u16),
     /// Error in making API request
     #[error("network error: {0}")]
     NetworkError(#[from] reqwest::Error),
-    #[error(transparent)]
-    ErrorResponse(#[from] ErrorResponse),
 }
 
 /// Enum of response types for serde
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
-enum IsEvenResponse {
+enum IsEvenResponseType {
     Ok(IsEven),
     Err(ErrorResponse),
 }
@@ -91,11 +96,9 @@ impl IsEven {
         client: reqwest::Client,
     ) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-
-        match client.get(&request_url).send().await?.json().await? {
-            IsEvenResponse::Ok(r) => Ok(r),
-            IsEvenResponse::Err(e) => Err(e.into()),
-        }
+        let response = client.get(&request_url).send().await?;
+        let status = response.status();
+        Self::parse_response(response.json().await?, status)
     }
 
     /// A blocking version of [`Self::get()`].
@@ -143,11 +146,9 @@ impl IsEven {
         client: reqwest::blocking::Client,
     ) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-
-        match client.get(&request_url).send()?.json()? {
-            IsEvenResponse::Ok(r) => Ok(r),
-            IsEvenResponse::Err(e) => Err(e.into()),
-        }
+        let response = client.get(&request_url).send()?;
+        let status = response.status();
+        Self::parse_response(response.json()?, status)
     }
 
     /// Returns `true` if the number is even.
@@ -163,6 +164,17 @@ impl IsEven {
     /// Returns `true` if the number is odd.
     pub fn isodd(&self) -> bool {
         !self.iseven()
+    }
+
+    fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEven, IsEvenError> {
+        match json {
+            IsEvenResponseType::Ok(r) => Ok(r),
+            IsEvenResponseType::Err(e) => match status.as_u16() {
+                400 => Err(IsEvenError::InvalidNumber(e)),
+                401 => Err(IsEvenError::NumberOutOfRange(e)),
+                _ => Err(IsEvenError::UnknownErrorResponse(e, status.as_u16()))
+            },
+        }
     }
 }
 
