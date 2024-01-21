@@ -21,7 +21,7 @@ jobs:
     - name: Build documentation
       run: cargo doc --release --verbose
     - name: Save files
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: iseven-api-rust
         path: |
