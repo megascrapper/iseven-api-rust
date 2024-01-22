@@ -26,10 +26,13 @@ pub fn is_odd<T: Display>(number: T) -> bool {
 /// An error type containing errors which can result from the API call.
 #[derive(thiserror::Error, Debug)]
 pub enum IsEvenError {
+    /// Number out of range for your [pricing plan](https://isevenapi.xyz/#pricing)
     #[error(transparent)]
     NumberOutOfRange(ErrorResponse),
+    /// Invalid number specified
     #[error(transparent)]
     InvalidNumber(ErrorResponse),
+    /// Unknown error response received, with HTTP status code
     #[error("Server returned status code {1}: {0}")]
     UnknownErrorResponse(ErrorResponse, u16),
     /// Error in making API request
@@ -66,9 +69,10 @@ impl IsEven {
     /// request or parsing of the response.
     ///
     /// * If the number is outside the range for your [pricing plan](https://isevenapi.xyz/#pricing),
-    /// it will return the `Number out of range` error as message.
-    /// * If the input is not a valid number, It returns `Invalid number.` as the message.
-    /// * If the error is in the request [`reqwest::Error`] is returned.
+    /// it will return [`IsEvenError::NumberOutOfRange`].
+    /// * If the input is not a valid number, it returns [`IsEvenError::InvalidNumber`].
+    /// * For other API error reponses, it returns [`IsEvenError::UnknownErrorResponse`] along with an HTTP status code.
+    /// * If the error is in the request [`IsEvenError::NetworkError`] is returned.
     ///
     /// # Examples
     /// ```no_run
@@ -106,6 +110,8 @@ impl IsEven {
     /// If you are planning on making multiple requests, it is best to use [`Self::with_client_blocking()`]
     /// instead and reuse the client, taking advantage of keep-alive connection pooling.
     /// ([Learn more](https://docs.rs/reqwest/0.11.10/reqwest/blocking/index.html#making-a-get-request))
+    ///
+    /// The return values are the same as in [`Self::get()`].
     ///
     /// # Panics
     /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
