@@ -28,13 +28,13 @@ pub fn is_odd<T: Display>(number: T) -> bool {
 pub enum IsEvenError {
     /// Number out of range for your [pricing plan](https://isevenapi.xyz/#pricing)
     #[error(transparent)]
-    NumberOutOfRange(ErrorResponse),
+    NumberOutOfRange(IsEvenApiErrorResponse),
     /// Invalid number specified
     #[error(transparent)]
-    InvalidNumber(ErrorResponse),
+    InvalidNumber(IsEvenApiErrorResponse),
     /// Unknown error response received, with HTTP status code
     #[error("Server returned status code {1}: {0}")]
-    UnknownErrorResponse(ErrorResponse, StatusCode),
+    UnknownErrorResponse(IsEvenApiErrorResponse, StatusCode),
     /// Error in making API request
     #[error("network error: {0}")]
     NetworkError(#[from] reqwest::Error),
@@ -44,8 +44,8 @@ pub enum IsEvenError {
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 enum IsEvenResponseType {
-    Ok(IsEven),
-    Err(ErrorResponse),
+    Ok(IsEvenApiResponse),
+    Err(IsEvenApiErrorResponse),
 }
 
 pub struct IsEvenApiClient {
@@ -77,7 +77,7 @@ impl IsEvenApiClient {
     ///
     /// # Examples
     /// TODO
-    pub async fn get<T: Display>(&self, number: T) -> Result<IsEven, IsEvenError> {
+    pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send().await?;
         let status = response.status();
@@ -98,7 +98,7 @@ impl IsEvenApiBlockingClient {
         Self { client }
     }
 
-    pub fn get<T: Display>(&self, number: T) -> Result<IsEven, IsEvenError> {
+    pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send()?;
         let status = response.status();
@@ -106,7 +106,7 @@ impl IsEvenApiBlockingClient {
     }
 }
 
-fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEven, IsEvenError> {
+fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEvenApiResponse, IsEvenError> {
     match json {
         IsEvenResponseType::Ok(r) => Ok(r),
         IsEvenResponseType::Err(e) => match status.as_u16() {
@@ -119,12 +119,12 @@ fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEven
 
 /// Struct containing the return response from the API.
 #[derive(Deserialize, Debug, Clone)]
-pub struct IsEven {
+pub struct IsEvenApiResponse {
     ad: String,
     iseven: bool,
 }
 
-impl IsEven {
+impl IsEvenApiResponse {
     /// Returns `true` if the number is even.
     pub fn iseven(&self) -> bool {
         self.iseven
@@ -141,7 +141,7 @@ impl IsEven {
     }
 }
 
-impl Display for IsEven {
+impl Display for IsEvenApiResponse {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", if self.iseven { "even" } else { "odd" })
     }
@@ -150,11 +150,11 @@ impl Display for IsEven {
 /// Struct containing the error response from the API.
 #[derive(thiserror::Error, Deserialize, Debug, Clone)]
 #[error("{}", self.error)]
-pub struct ErrorResponse {
+pub struct IsEvenApiErrorResponse {
     error: String,
 }
 
-impl ErrorResponse {
+impl IsEvenApiErrorResponse {
     /// Returns the error message.
     pub fn error(&self) -> &str {
         &self.error
