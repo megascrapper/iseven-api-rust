@@ -23,38 +23,15 @@ pub fn is_odd<T: Display>(number: T) -> bool {
     !is_even(number)
 }
 
-/// An error type containing errors which can result from the API call.
-#[derive(thiserror::Error, Debug)]
-pub enum IsEvenError {
-    /// Number out of range for your [pricing plan](https://isevenapi.xyz/#pricing)
-    #[error(transparent)]
-    NumberOutOfRange(IsEvenApiErrorResponse),
-    /// Invalid number specified
-    #[error(transparent)]
-    InvalidNumber(IsEvenApiErrorResponse),
-    /// Unknown error response received, with HTTP status code
-    #[error("Server returned status code {1}: {0}")]
-    UnknownErrorResponse(IsEvenApiErrorResponse, StatusCode),
-    /// Error in making API request
-    #[error("network error: {0}")]
-    NetworkError(#[from] reqwest::Error),
-}
-
-/// Enum of response types for serde
-#[derive(Deserialize, Debug)]
-#[serde(untagged)]
-enum IsEvenResponseType {
-    Ok(IsEvenApiResponse),
-    Err(IsEvenApiErrorResponse),
-}
-
 pub struct IsEvenApiClient {
-    client: Client
+    client: Client,
 }
 
 impl IsEvenApiClient {
     pub fn new() -> Self {
-        Self { client: reqwest::Client::new() }
+        Self {
+            client: reqwest::Client::new(),
+        }
     }
 
     pub fn with_client(client: Client) -> Self {
@@ -66,18 +43,18 @@ impl IsEvenApiClient {
     /// advertisement.
     ///
     /// # Errors
-    /// Returns an [`IsEvenError`] if either the API request responded with an error or there is an error in the
+    /// Returns an [`IsEvenApiError`] if either the API request responded with an error or there is an error in the
     /// request or parsing of the response.
     ///
     /// * If the number is outside the range for your [pricing plan](https://isevenapi.xyz/#pricing),
-    /// it will return [`IsEvenError::NumberOutOfRange`].
-    /// * If the input is not a valid number, it returns [`IsEvenError::InvalidNumber`].
-    /// * For other API error reponses, it returns [`IsEvenError::UnknownErrorResponse`] along with an HTTP status code.
-    /// * If the error is in the request [`IsEvenError::NetworkError`] is returned.
+    /// it will return [`IsEvenApiError::NumberOutOfRange`].
+    /// * If the input is not a valid number, it returns [`IsEvenApiError::InvalidNumber`].
+    /// * For other API error reponses, it returns [`IsEvenApiError::UnknownErrorResponse`] along with an HTTP status code.
+    /// * If the error is in the request [`IsEvenApiError::NetworkError`] is returned.
     ///
     /// # Examples
     /// TODO
-    pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenError> {
+    pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send().await?;
         let status = response.status();
@@ -86,34 +63,25 @@ impl IsEvenApiClient {
 }
 
 pub struct IsEvenApiBlockingClient {
-    client: reqwest::blocking::Client
+    client: reqwest::blocking::Client,
 }
 
 impl IsEvenApiBlockingClient {
     pub fn new() -> Self {
-        Self { client: reqwest::blocking::Client::new() }
+        Self {
+            client: reqwest::blocking::Client::new(),
+        }
     }
 
     pub fn with_client(client: reqwest::blocking::Client) -> Self {
         Self { client }
     }
 
-    pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenError> {
+    pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send()?;
         let status = response.status();
         parse_response(response.json()?, status)
-    }
-}
-
-fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEvenApiResponse, IsEvenError> {
-    match json {
-        IsEvenResponseType::Ok(r) => Ok(r),
-        IsEvenResponseType::Err(e) => match status.as_u16() {
-            400 => Err(IsEvenError::InvalidNumber(e)),
-            401 => Err(IsEvenError::NumberOutOfRange(e)),
-            _ => Err(IsEvenError::UnknownErrorResponse(e, status))
-        },
     }
 }
 
@@ -158,6 +126,45 @@ impl IsEvenApiErrorResponse {
     /// Returns the error message.
     pub fn error(&self) -> &str {
         &self.error
+    }
+}
+
+/// An error type containing errors which can result from the API call.
+#[derive(thiserror::Error, Debug)]
+pub enum IsEvenApiError {
+    /// Number out of range for your [pricing plan](https://isevenapi.xyz/#pricing)
+    #[error(transparent)]
+    NumberOutOfRange(IsEvenApiErrorResponse),
+    /// Invalid number specified
+    #[error(transparent)]
+    InvalidNumber(IsEvenApiErrorResponse),
+    /// Unknown error response received, with HTTP status code
+    #[error("Server returned status code {1}: {0}")]
+    UnknownErrorResponse(IsEvenApiErrorResponse, StatusCode),
+    /// Error in making API request
+    #[error("network error: {0}")]
+    NetworkError(#[from] reqwest::Error),
+}
+
+/// Enum of response types for serde
+#[derive(Deserialize, Debug)]
+#[serde(untagged)]
+enum IsEvenResponseType {
+    Ok(IsEvenApiResponse),
+    Err(IsEvenApiErrorResponse),
+}
+
+fn parse_response(
+    json: IsEvenResponseType,
+    status: StatusCode,
+) -> Result<IsEvenApiResponse, IsEvenApiError> {
+    match json {
+        IsEvenResponseType::Ok(r) => Ok(r),
+        IsEvenResponseType::Err(e) => match status.as_u16() {
+            400 => Err(IsEvenApiError::InvalidNumber(e)),
+            401 => Err(IsEvenApiError::NumberOutOfRange(e)),
+            _ => Err(IsEvenApiError::UnknownErrorResponse(e, status)),
+        },
     }
 }
 
