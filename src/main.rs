@@ -5,15 +5,14 @@ use iseven_api::IsEven;
 
 const USAGE_MSG: &str = "Usage: iseven_api [integer]";
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let argv = std::env::args().collect::<Vec<_>>();
     if argv.len() != 2 {
         eprintln!("{} {}", Red.paint("error:"), USAGE_MSG);
         exit(1);
     } else {
         let num = &argv[1];
-        match IsEven::get(num).await {
+        match IsEven::get_blocking(num) {
             Ok(response) => {
                 println!("Advertisement: {}", response.ad());
                 println!(
