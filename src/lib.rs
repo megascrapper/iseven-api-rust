@@ -29,9 +29,7 @@ pub struct IsEvenApiClient {
 
 impl IsEvenApiClient {
     pub fn new() -> Self {
-        Self {
-            client: reqwest::Client::new(),
-        }
+        Self::with_client(Client::new())
     }
 
     pub fn with_client(client: Client) -> Self {
@@ -68,9 +66,7 @@ pub struct IsEvenApiBlockingClient {
 
 impl IsEvenApiBlockingClient {
     pub fn new() -> Self {
-        Self {
-            client: reqwest::blocking::Client::new(),
-        }
+        Self::with_client(reqwest::blocking::Client::new())
     }
 
     pub fn with_client(client: reqwest::blocking::Client) -> Self {
