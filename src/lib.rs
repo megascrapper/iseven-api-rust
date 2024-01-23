@@ -34,7 +34,7 @@ pub enum IsEvenError {
     InvalidNumber(ErrorResponse),
     /// Unknown error response received, with HTTP status code
     #[error("Server returned status code {1}: {0}")]
-    UnknownErrorResponse(ErrorResponse, u16),
+    UnknownErrorResponse(ErrorResponse, StatusCode),
     /// Error in making API request
     #[error("network error: {0}")]
     NetworkError(#[from] reqwest::Error),
@@ -178,7 +178,7 @@ impl IsEven {
             IsEvenResponseType::Err(e) => match status.as_u16() {
                 400 => Err(IsEvenError::InvalidNumber(e)),
                 401 => Err(IsEvenError::NumberOutOfRange(e)),
-                _ => Err(IsEvenError::UnknownErrorResponse(e, status.as_u16()))
+                _ => Err(IsEvenError::UnknownErrorResponse(e, status))
             },
         }
     }
@@ -208,38 +208,29 @@ impl ErrorResponse {
 mod tests {
     use crate::*;
 
-    #[tokio::test]
-    async fn test_valid_int() {
-        let odd_nums = [1, 3, 5, 9, 5283];
-        let even_nums = [0, 2, 8, 10, 88888];
-        for (&a, b) in odd_nums.iter().zip(even_nums) {
-            assert!(!IsEven::get(a).await.unwrap().iseven());
-            assert!(IsEven::get(b).await.unwrap().iseven());
-        }
-    }
+    const ODD_INTS: [i32; 5] = [1, 3, 5, 9, 5283];
+    const EVEN_INTS: [i32; 5] = [0, 2, 8, 10, 88888];
+    const OUT_OF_RANGE_INTS: [i32; 3] = [1000000, i32::MAX, -1];
+    const INVALID_INPUT: [&str; 4] = ["abc", "1.0.0", "hello world.as_u16()", "3.14"];
 
     #[tokio::test]
-    async fn test_valid_float() {
-        let odd_nums = [1.0, 3.0, 5.0, 9.0, 5283.0];
-        let even_nums = [0.0, 2.0, 8.0, 10.0, 88888.0];
-        for (&a, b) in odd_nums.iter().zip(even_nums) {
-            assert!(!IsEven::get(a).await.unwrap().iseven());
+    async fn test_valid_int() {
+        for (&a, b) in ODD_INTS.iter().zip(EVEN_INTS) {
+            assert!(IsEven::get(a).await.unwrap().isodd());
             assert!(IsEven::get(b).await.unwrap().iseven());
         }
     }
 
     #[tokio::test]
     async fn test_out_of_range() {
-        let nums = [1000000, i32::MAX, -1];
-        for &a in nums.iter() {
+        for &a in OUT_OF_RANGE_INTS.iter() {
             assert!(IsEven::get(a).await.is_err());
         }
     }
 
     #[tokio::test]
     async fn test_invalid_input() {
-        let values = ["abc", "1.0.0", "hello world", "3.14"];
-        for &a in values.iter() {
+        for &a in INVALID_INPUT.iter() {
             assert!(IsEven::get(a).await.is_err());
         }
     }
@@ -247,36 +238,22 @@ mod tests {
     // blocking tests
     #[test]
     fn test_valid_int_blocking() {
-        let odd_nums = [1, 3, 5, 9, 5283];
-        let even_nums = [0, 2, 8, 10, 88888];
-        for (&a, b) in odd_nums.iter().zip(even_nums) {
-            assert!(!IsEven::get_blocking(a).unwrap().iseven());
-            assert!(IsEven::get_blocking(b).unwrap().iseven());
-        }
-    }
-
-    #[test]
-    fn test_valid_float_blocking() {
-        let odd_nums = [1.0, 3.0, 5.0, 9.0, 5283.0];
-        let even_nums = [0.0, 2.0, 8.0, 10.0, 88888.0];
-        for (&a, b) in odd_nums.iter().zip(even_nums) {
-            assert!(!IsEven::get_blocking(a).unwrap().iseven());
+        for (&a, b) in ODD_INTS.iter().zip(EVEN_INTS) {
+            assert!(IsEven::get_blocking(a).unwrap().isodd());
             assert!(IsEven::get_blocking(b).unwrap().iseven());
         }
     }
 
     #[test]
     fn test_out_of_range_blocking() {
-        let nums = [1000000, i32::MAX, -1];
-        for &a in nums.iter() {
+        for &a in OUT_OF_RANGE_INTS.iter() {
             assert!(IsEven::get_blocking(a).is_err());
         }
     }
 
     #[test]
     fn test_invalid_input_blocking() {
-        let values = ["abc", "1.0.0", "hello world", "3.14"];
-        for &a in values.iter() {
+        for &a in INVALID_INPUT.iter() {
             assert!(IsEven::get_blocking(a).is_err());
         }
     }
