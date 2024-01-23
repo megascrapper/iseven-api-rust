@@ -4,7 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use reqwest::StatusCode;
+use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
@@ -13,7 +13,7 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 ///
 /// **Note:** this method will panic if it encounters an error.
 pub fn is_even<T: Display>(number: T) -> bool {
-    IsEven::get_blocking(number).unwrap().iseven()
+    IsEvenApiBlockingClient::new().get(number).unwrap().iseven()
 }
 
 /// Checks if a number is odd.
@@ -48,21 +48,22 @@ enum IsEvenResponseType {
     Err(ErrorResponse),
 }
 
-/// Struct containing the return response from the API.
-#[derive(Deserialize, Debug, Clone)]
-pub struct IsEven {
-    ad: String,
-    iseven: bool,
+pub struct IsEvenApiClient {
+    client: Client
 }
 
-impl IsEven {
+impl IsEvenApiClient {
+    pub fn new() -> Self {
+        Self { client: reqwest::Client::new() }
+    }
+
+    pub fn with_client(client: Client) -> Self {
+        Self { client }
+    }
+
     /// sends a GET request to the isEven API for a given number. The return value includes the `bool`
     /// value of whether the number is even (`true` indicates an even number) as well as the
     /// advertisement.
-    ///
-    /// If you are planning on making multiple requests, it is best to use [`Self::with_client()`]
-    /// instead and reuse the client, taking advantage of keep-alive connection pooling.
-    /// ([Learn more](https://docs.rs/reqwest/0.11.10/reqwest/index.html#making-a-get-request))
     ///
     /// # Errors
     /// Returns an [`IsEvenError`] if either the API request responded with an error or there is an error in the
@@ -75,88 +76,55 @@ impl IsEven {
     /// * If the error is in the request [`IsEvenError::NetworkError`] is returned.
     ///
     /// # Examples
-    /// ```no_run
-    /// # use std::error::Error;
-    /// use iseven_api::IsEven;
-    ///
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn Error>> {
-    /// let odd_num = IsEven::get(41).await?;
-    /// let even_num = IsEven::get(42).await?;
-    ///
-    /// assert!(!odd_num.iseven());
-    /// assert!(even_num.iseven());
-    /// #
-    /// #   Ok(())
-    /// # }
-    /// ```
-    pub async fn get<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
-        Self::with_client(number, reqwest::Client::new()).await
-    }
-
-    /// sends a GET request to the isEven API for a given number, using a supplied [`reqwest::Client`].
-    pub async fn with_client<T: Display>(
-        number: T,
-        client: reqwest::Client,
-    ) -> Result<IsEven, IsEvenError> {
+    /// TODO
+    pub async fn get<T: Display>(&self, number: T) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = client.get(&request_url).send().await?;
+        let response = self.client.get(&request_url).send().await?;
         let status = response.status();
-        Self::parse_response(response.json().await?, status)
+        parse_response(response.json().await?, status)
+    }
+}
+
+pub struct IsEvenApiBlockingClient {
+    client: reqwest::blocking::Client
+}
+
+impl IsEvenApiBlockingClient {
+    pub fn new() -> Self {
+        Self { client: reqwest::blocking::Client::new() }
     }
 
-    /// A blocking version of [`Self::get()`].
-    ///
-    /// If you are planning on making multiple requests, it is best to use [`Self::with_client_blocking()`]
-    /// instead and reuse the client, taking advantage of keep-alive connection pooling.
-    /// ([Learn more](https://docs.rs/reqwest/0.11.10/reqwest/blocking/index.html#making-a-get-request))
-    ///
-    /// The return values are the same as in [`Self::get()`].
-    ///
-    /// # Panics
-    /// This function cannot be executed in an async runtime, as per [`reqwest::blocking`] restriction.
-    ///
-    /// ``` should_panic,no_run
-    /// use std::error::Error;
-    /// use iseven_api::IsEven;
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), Box<dyn Error>> {
-    ///     let even_num = IsEven::get_blocking(42)?;
-    ///
-    ///     Ok(())
-    /// }
-    /// ```
-    ///
-    /// # Examples
-    /// ```no_run
-    /// # use std::error::Error;
-    /// use iseven_api::IsEven;
-    ///
-    /// # fn main() -> Result<(), Box<dyn Error>> {
-    /// let odd_num = IsEven::get_blocking(41)?;
-    /// let even_num = IsEven::get_blocking(42)?;
-    ///
-    /// assert!(!odd_num.iseven());
-    /// assert!(even_num.iseven());
-    /// #
-    /// #    Ok(())
-    /// # }
-    /// ```
-    pub fn get_blocking<T: Display>(number: T) -> Result<IsEven, IsEvenError> {
-        Self::with_client_blocking(number, reqwest::blocking::Client::new())
+    pub fn with_client(client: reqwest::blocking::Client) -> Self {
+        Self { client }
     }
 
-    /// sends a blocking GET request to the isEven API for a given number, using a supplied [`reqwest::blocking::Client`].
-    pub fn with_client_blocking<T: Display>(
-        number: T,
-        client: reqwest::blocking::Client,
-    ) -> Result<IsEven, IsEvenError> {
+    pub fn get<T: Display>(&self, number: T) -> Result<IsEven, IsEvenError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = client.get(&request_url).send()?;
+        let response = self.client.get(&request_url).send()?;
         let status = response.status();
-        Self::parse_response(response.json()?, status)
+        parse_response(response.json()?, status)
     }
+}
 
+fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEven, IsEvenError> {
+    match json {
+        IsEvenResponseType::Ok(r) => Ok(r),
+        IsEvenResponseType::Err(e) => match status.as_u16() {
+            400 => Err(IsEvenError::InvalidNumber(e)),
+            401 => Err(IsEvenError::NumberOutOfRange(e)),
+            _ => Err(IsEvenError::UnknownErrorResponse(e, status))
+        },
+    }
+}
+
+/// Struct containing the return response from the API.
+#[derive(Deserialize, Debug, Clone)]
+pub struct IsEven {
+    ad: String,
+    iseven: bool,
+}
+
+impl IsEven {
     /// Returns `true` if the number is even.
     pub fn iseven(&self) -> bool {
         self.iseven
@@ -170,17 +138,6 @@ impl IsEven {
     /// Returns `true` if the number is odd.
     pub fn isodd(&self) -> bool {
         !self.iseven()
-    }
-
-    fn parse_response(json: IsEvenResponseType, status: StatusCode) -> Result<IsEven, IsEvenError> {
-        match json {
-            IsEvenResponseType::Ok(r) => Ok(r),
-            IsEvenResponseType::Err(e) => match status.as_u16() {
-                400 => Err(IsEvenError::InvalidNumber(e)),
-                401 => Err(IsEvenError::NumberOutOfRange(e)),
-                _ => Err(IsEvenError::UnknownErrorResponse(e, status))
-            },
-        }
     }
 }
 
@@ -215,46 +172,52 @@ mod tests {
 
     #[tokio::test]
     async fn test_valid_int() {
+        let client = IsEvenApiClient::new();
         for (&a, b) in ODD_INTS.iter().zip(EVEN_INTS) {
-            assert!(IsEven::get(a).await.unwrap().isodd());
-            assert!(IsEven::get(b).await.unwrap().iseven());
+            assert!(client.get(a).await.unwrap().isodd());
+            assert!(client.get(b).await.unwrap().iseven());
         }
     }
 
     #[tokio::test]
     async fn test_out_of_range() {
+        let client = IsEvenApiClient::new();
         for &a in OUT_OF_RANGE_INTS.iter() {
-            assert!(IsEven::get(a).await.is_err());
+            assert!(client.get(a).await.is_err());
         }
     }
 
     #[tokio::test]
     async fn test_invalid_input() {
+        let client = IsEvenApiClient::new();
         for &a in INVALID_INPUT.iter() {
-            assert!(IsEven::get(a).await.is_err());
+            assert!(client.get(a).await.is_err());
         }
     }
 
     // blocking tests
     #[test]
     fn test_valid_int_blocking() {
+        let client = IsEvenApiBlockingClient::new();
         for (&a, b) in ODD_INTS.iter().zip(EVEN_INTS) {
-            assert!(IsEven::get_blocking(a).unwrap().isodd());
-            assert!(IsEven::get_blocking(b).unwrap().iseven());
+            assert!(client.get(a).unwrap().isodd());
+            assert!(client.get(b).unwrap().iseven());
         }
     }
 
     #[test]
     fn test_out_of_range_blocking() {
+        let client = IsEvenApiBlockingClient::new();
         for &a in OUT_OF_RANGE_INTS.iter() {
-            assert!(IsEven::get_blocking(a).is_err());
+            assert!(client.get(a).is_err());
         }
     }
 
     #[test]
     fn test_invalid_input_blocking() {
+        let client = IsEvenApiBlockingClient::new();
         for &a in INVALID_INPUT.iter() {
-            assert!(IsEven::get_blocking(a).is_err());
+            assert!(client.get(a).is_err());
         }
     }
 }

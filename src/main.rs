@@ -1,7 +1,7 @@
 use ansi_term::Colour::Red;
 use std::process::exit;
 
-use iseven_api::IsEven;
+use iseven_api::IsEvenApiBlockingClient;
 
 const USAGE_MSG: &str = "Usage: iseven_api [integer]";
 
@@ -12,7 +12,8 @@ fn main() {
         exit(1);
     } else {
         let num = &argv[1];
-        match IsEven::get_blocking(num) {
+        let client = IsEvenApiBlockingClient::new();
+        match client.get(num) {
             Ok(response) => {
                 println!("Advertisement: {}", response.ad());
                 println!(
