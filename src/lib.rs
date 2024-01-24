@@ -81,7 +81,7 @@ impl IsEvenApiClient {
     /// * If the error is in the request [`IsEvenApiError::NetworkError`] is returned.
     pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(&request_url).send().await?;
+        let response = self.client.get(request_url).send().await?;
         let status = response.status();
         parse_response(response.json().await?, status)
     }
@@ -145,7 +145,7 @@ impl IsEvenApiBlockingClient {
     /// See [`IsEvenApiClient::get`] for a list of possible errors.
     pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(&request_url).send()?;
+        let response = self.client.get(request_url).send()?;
         let status = response.status();
         parse_response(response.json()?, status)
     }
