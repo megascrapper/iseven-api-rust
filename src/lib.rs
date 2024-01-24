@@ -4,7 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use reqwest::{Client, StatusCode};
+use reqwest::{Client, ClientBuilder, StatusCode};
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
@@ -23,15 +23,45 @@ pub fn is_odd<T: Display>(number: T) -> bool {
     !is_even(number)
 }
 
+
+/// Asynchronous API client for isEven API.
+///
+/// If you need a blocking client, use [`IsEvenApiBlockingClient`] instead.
+///
+/// If you're making multiple requests, it's probably a good idea to reuse the client to take advantage of keep-alive
+/// connection pooling. ([Learn more](https://docs.rs/reqwest/latest/reqwest/index.html#making-a-get-request))
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// use iseven_api::IsEvenApiClient;
+///
+/// # #[tokio::main]
+/// # async fn main() -> Result<(), Box<dyn Error>> {
+/// // Initialise the client
+/// let client = IsEvenApiClient::new();
+///
+/// // Make requests
+/// let odd_num = client.get(41).await?;
+/// let even_num = client.get(42).await?;
+/// assert!(odd_num.isodd());
+/// assert!(even_num.iseven());
+/// #
+/// #   Ok(())
+/// # }
+/// ```
 pub struct IsEvenApiClient {
     client: Client,
 }
 
 impl IsEvenApiClient {
+    /// Creates a new instance of [`IsEvenApiClient`] with a default HTTP client.
     pub fn new() -> Self {
         Self::with_client(Client::new())
     }
 
+    /// Creates a new instance of [`IsEvenApiClient`] with a supplied [`reqwest::Client`].
     pub fn with_client(client: Client) -> Self {
         Self { client }
     }
@@ -49,9 +79,6 @@ impl IsEvenApiClient {
     /// * If the input is not a valid number, it returns [`IsEvenApiError::InvalidNumber`].
     /// * For other API error reponses, it returns [`IsEvenApiError::UnknownErrorResponse`] along with an HTTP status code.
     /// * If the error is in the request [`IsEvenApiError::NetworkError`] is returned.
-    ///
-    /// # Examples
-    /// TODO
     pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send().await?;
@@ -60,24 +87,73 @@ impl IsEvenApiClient {
     }
 }
 
+impl Default for IsEvenApiClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+
+/// Blocking API client for isEven API.
+///
+///
+/// If you're making multiple requests, it's probably a good idea to reuse the client to take advantage of keep-alive
+/// connection pooling. ([Learn more](https://docs.rs/reqwest/latest/reqwest/index.html#making-a-get-request))
+///
+/// As per [`reqwest::blocking`] restriction, this client must not be used in an async runtime. Please use
+/// [`IsEvenApiClient`] for that.
+///
+/// # Examples
+///
+/// ```
+/// # use std::error::Error;
+/// use iseven_api::IsEvenApiBlockingClient;
+///
+/// # fn main() -> Result<(), Box<dyn Error>> {
+/// // Initialise the client
+/// let client = IsEvenApiBlockingClient::new();
+///
+/// // Make requests
+/// let odd_num = client.get(41)?;
+/// let even_num = client.get(42)?;
+/// assert!(odd_num.isodd());
+/// assert!(even_num.iseven());
+/// #
+/// #   Ok(())
+/// # }
+/// ```
 pub struct IsEvenApiBlockingClient {
     client: reqwest::blocking::Client,
 }
 
 impl IsEvenApiBlockingClient {
+    /// Creates a new instance of [`IsEvenApiBlockingClient`] with a default HTTP client.
     pub fn new() -> Self {
         Self::with_client(reqwest::blocking::Client::new())
     }
 
+    /// Creates a new instance of [`IsEvenApiBlockingClient`] with a supplied [`reqwest::Client`].
     pub fn with_client(client: reqwest::blocking::Client) -> Self {
         Self { client }
     }
 
+    /// sends a GET request to the isEven API for a given number. The return value includes the `bool`
+    /// value of whether the number is even (`true` indicates an even number) as well as the
+    /// advertisement.
+    ///
+    /// # Errors
+    /// See [`IsEvenApiClient::get`] for a list of possible errors.
     pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
         let response = self.client.get(&request_url).send()?;
         let status = response.status();
         parse_response(response.json()?, status)
+    }
+}
+
+impl Default for IsEvenApiBlockingClient {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
