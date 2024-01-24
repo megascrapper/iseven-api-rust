@@ -4,7 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use reqwest::{Client, ClientBuilder, StatusCode};
+use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
