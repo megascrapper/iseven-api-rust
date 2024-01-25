@@ -6,8 +6,9 @@ const USAGE_MSG: &str = "Usage: iseven_api [integer]";
 
 fn main() {
     let argv = std::env::args().collect::<Vec<_>>();
+    let app_name = &argv[0];
     if argv.len() != 2 {
-        eprintln!("{} {}", Red.paint("error:"), USAGE_MSG);
+        eprintln!("error: {}: {}", app_name, USAGE_MSG);
         exit(1);
     } else {
         let num = &argv[1];
@@ -22,7 +23,7 @@ fn main() {
                 )
             }
             Err(e) => {
-                eprintln!("error: {}: {}", &argv[0], e);
+                eprintln!("error: {}: {}", app_name, e);
                 exit(1);
             }
         }
