@@ -50,6 +50,7 @@ pub fn is_odd<T: Display>(number: T) -> bool {
 /// #   Ok(())
 /// # }
 /// ```
+#[derive(Debug, Clone)]
 pub struct IsEvenApiClient {
     client: Client,
 }
@@ -120,6 +121,7 @@ impl Default for IsEvenApiClient {
 /// #   Ok(())
 /// # }
 /// ```
+#[derive(Debug, Clone)]
 pub struct IsEvenApiBlockingClient {
     client: reqwest::blocking::Client,
 }
@@ -156,7 +158,7 @@ impl Default for IsEvenApiBlockingClient {
 }
 
 /// Struct containing the return response from the API.
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct IsEvenApiResponse {
     ad: String,
     iseven: bool,
@@ -186,7 +188,7 @@ impl Display for IsEvenApiResponse {
 }
 
 /// Struct containing the error response from the API.
-#[derive(thiserror::Error, Deserialize, Debug, Clone)]
+#[derive(thiserror::Error, Deserialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[error("{}", self.error)]
 pub struct IsEvenApiErrorResponse {
     error: String,
