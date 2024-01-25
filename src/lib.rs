@@ -23,7 +23,6 @@ pub fn is_odd<T: Display>(number: T) -> bool {
     !is_even(number)
 }
 
-
 /// Asynchronous API client for isEven API.
 ///
 /// If you need a blocking client, use [`IsEvenApiBlockingClient`] instead.
@@ -92,7 +91,6 @@ impl Default for IsEvenApiClient {
         Self::new()
     }
 }
-
 
 /// Blocking API client for isEven API.
 ///
