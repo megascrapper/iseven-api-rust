@@ -4,7 +4,7 @@
 //!
 //! # Examples
 //! A simple commandline app:
-//! ```
+//! ```no_run
 //! use std::process::exit;
 //! use iseven_api::IsEvenApiBlockingClient;
 //!
@@ -36,6 +36,12 @@
 //!     }
 //! }
 //! ```
+//!
+//! # Crate features
+//! - **blocking** - Enables [`IsEvenApiBlockingClient`] which is a blocking alternative to [`IsEvenApiClient`]
+//! and does not require async runtime. It also enables 'convenience' functions [`is_odd`] and [`is_even`].
+
+#![warn(missing_docs)]
 
 use std::fmt::{Display, Formatter};
 
@@ -46,8 +52,13 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 
 /// Checks if a number is even.
 ///
-/// **Note:** this method will panic if it encounters an error. Use [`IsEvenApiClient`] or [`IsEvenApiBlockingClient`]
+/// # Panics
+///
+/// This method will panic if it encounters an error. Use [`IsEvenApiClient`] or [`IsEvenApiBlockingClient`]
 /// if you want to handle failures more gracefully.
+///
+/// As this function internally uses blocking HTTP client, this client must also not be used in an async runtime.
+///
 ///
 /// # Examples
 /// ```
@@ -56,15 +67,20 @@ const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
 /// # fn main() {
 /// assert!(is_even(42));
 /// # }
+#[cfg(feature = "blocking")]
 pub fn is_even<T: Display>(number: T) -> bool {
     IsEvenApiBlockingClient::new().get(number).unwrap().iseven()
 }
 
 /// Checks if a number is odd.
 ///
+/// # Panics
 ///
-/// **Note:** this method will panic if it encounters an error. Use [`IsEvenApiClient`] or [`IsEvenApiBlockingClient`]
+/// This method will panic if it encounters an error. Use [`IsEvenApiClient`] or [`IsEvenApiBlockingClient`]
 /// if you want to handle failures more gracefully.
+///
+/// As this function internally uses blocking HTTP client, this client must also not be used in an async runtime.
+///
 ///
 /// # Examples
 /// ```
@@ -73,6 +89,7 @@ pub fn is_even<T: Display>(number: T) -> bool {
 /// # fn main() {
 /// assert!(is_odd(333));
 /// # }
+#[cfg(feature = "blocking")]
 pub fn is_odd<T: Display>(number: T) -> bool {
     !is_even(number)
 }
@@ -175,11 +192,13 @@ impl Default for IsEvenApiClient {
 /// #   Ok(())
 /// # }
 /// ```
+#[cfg(feature = "blocking")]
 #[derive(Debug, Clone)]
 pub struct IsEvenApiBlockingClient {
     client: reqwest::blocking::Client,
 }
 
+#[cfg(feature = "blocking")]
 impl IsEvenApiBlockingClient {
     /// Creates a new instance of [`IsEvenApiBlockingClient`] with a default HTTP client.
     pub fn new() -> Self {
@@ -205,6 +224,7 @@ impl IsEvenApiBlockingClient {
     }
 }
 
+#[cfg(feature = "blocking")]
 impl Default for IsEvenApiBlockingClient {
     fn default() -> Self {
         Self::new()
@@ -330,6 +350,7 @@ mod tests {
 
     // blocking tests
     #[test]
+    #[cfg(feature = "blocking")]
     fn test_valid_int_blocking() {
         let client = IsEvenApiBlockingClient::new();
         for (&a, b) in ODD_INTS.iter().zip(EVEN_INTS) {
@@ -339,6 +360,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "blocking")]
     fn test_out_of_range_blocking() {
         let client = IsEvenApiBlockingClient::new();
         for &a in OUT_OF_RANGE_INTS.iter() {
@@ -347,6 +369,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "blocking")]
     fn test_invalid_input_blocking() {
         let client = IsEvenApiBlockingClient::new();
         for &a in INVALID_INPUT.iter() {
