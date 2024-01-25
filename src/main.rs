@@ -1,4 +1,3 @@
-use ansi_term::Colour::Red;
 use std::process::exit;
 
 use iseven_api::IsEvenApiBlockingClient;
@@ -23,7 +22,7 @@ fn main() {
                 )
             }
             Err(e) => {
-                eprintln!("{} {}", Red.paint("error:"), e);
+                eprintln!("error: {}: {}", &argv[0], e);
                 exit(1);
             }
         }
