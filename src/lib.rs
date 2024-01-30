@@ -45,7 +45,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use reqwest::{Client, StatusCode};
+use reqwest::{Client, Response, StatusCode};
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
@@ -151,10 +151,15 @@ impl IsEvenApiClient {
     /// * For other API error reponses, it returns [`IsEvenApiError::UnknownErrorResponse`] along with an HTTP status code.
     /// * If the error is in the request [`IsEvenApiError::NetworkError`] is returned.
     pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
-        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(request_url).send().await?;
+        let response = self.fetch_response(number).await?;
         let status = response.status();
         parse_response(response.json().await?, status)
+    }
+
+    /// Make the actual web request
+    async fn fetch_response<T: Display>(&self, number: T) -> reqwest::Result<Response> {
+        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
+        self.client.get(request_url).send().await
     }
 }
 
@@ -217,10 +222,15 @@ impl IsEvenApiBlockingClient {
     /// # Errors
     /// See [`IsEvenApiClient::get`] for a list of possible errors.
     pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
-        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(request_url).send()?;
+        let response = self.fetch_response(number)?;
         let status = response.status();
         parse_response(response.json()?, status)
+    }
+
+    /// Make the actual web request
+    fn fetch_response<T: Display>(&self, number: T) -> reqwest::Result<reqwest::blocking::Response> {
+        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
+        self.client.get(request_url).send()
     }
 }
 
