@@ -3,37 +3,22 @@
 //! Includes the library as well as a simple command line app.
 //!
 //! # Examples
-//! A simple commandline app:
-//! ```no_run
-//! use std::process::exit;
-//! use iseven_api::IsEvenApiBlockingClient;
+//! ```
+//! use std::error::Error;
+//! use iseven_api::IsEvenApiClient;
 //!
-//! const USAGE_MSG: &str = "Usage: iseven_api [integer]";
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn Error>> {
+//!     // Initialise the client
+//!     let client = IsEvenApiClient::new();
 //!
-//! fn main() {
-//!     let argv = std::env::args().collect::<Vec<_>>();
-//!     let app_name = &argv[0];
-//!     if argv.len() != 2 {
-//!         eprintln!("error: {}: {}", app_name, USAGE_MSG);
-//!         exit(1);
-//!     } else {
-//!         let num = &argv[1];
-//!         let client = IsEvenApiBlockingClient::new();
-//!         match client.get(num) {
-//!             Ok(response) => {
-//!                 println!("Advertisement: {}", response.ad());
-//!                 println!(
-//!                     "{} is an {} number",
-//!                     num,
-//!                     if response.iseven() { "even" } else { "odd" }
-//!                 )
-//!             }
-//!             Err(e) => {
-//!                 eprintln!("error: {}: {}", app_name, e);
-//!                 exit(1);
-//!             }
-//!         }
-//!     }
+//!     // Make requests
+//!     let odd_num = client.get(41).await?;
+//!     let even_num = client.get(42).await?;
+//!     assert!(odd_num.isodd());
+//!     assert!(even_num.iseven());
+//!
+//!     Ok(())
 //! }
 //! ```
 //!
@@ -45,7 +30,8 @@
 
 use std::fmt::{Display, Formatter};
 
-use reqwest::{Client, StatusCode};
+use log::debug;
+use reqwest::{Client, Response, StatusCode};
 use serde::Deserialize;
 
 const API_URL: &str = "https://api.isevenapi.xyz/api/iseven/";
@@ -134,6 +120,7 @@ impl IsEvenApiClient {
 
     /// Creates a new instance of [`IsEvenApiClient`] with a supplied [`reqwest::Client`].
     pub fn with_client(client: Client) -> Self {
+        debug!("Creating async HTTP client");
         Self { client }
     }
 
@@ -151,10 +138,27 @@ impl IsEvenApiClient {
     /// * For other API error reponses, it returns [`IsEvenApiError::UnknownErrorResponse`] along with an HTTP status code.
     /// * If the error is in the request [`IsEvenApiError::NetworkError`] is returned.
     pub async fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
-        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(request_url).send().await?;
+        let response = self.fetch_response(number).await?;
         let status = response.status();
         parse_response(response.json().await?, status)
+    }
+
+    /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    ///
+    /// # Errors
+    ///
+    /// Unlike [`Self::get`], error responses will NOT be considered an error. Only request failures will be reported
+    /// as an error.
+    pub async fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
+        let response = self.fetch_response(number).await?;
+        Ok(response.text().await.expect("Unable to decode response body"))
+    }
+
+    /// Make the actual web request
+    async fn fetch_response<T: Display>(&self, number: T) -> reqwest::Result<Response> {
+        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
+        debug!("Fetching API response from {}", request_url);
+        self.client.get(request_url).send().await
     }
 }
 
@@ -207,6 +211,7 @@ impl IsEvenApiBlockingClient {
 
     /// Creates a new instance of [`IsEvenApiBlockingClient`] with a supplied [`reqwest::Client`].
     pub fn with_client(client: reqwest::blocking::Client) -> Self {
+        debug!("Creating blocking HTTP client");
         Self { client }
     }
 
@@ -217,10 +222,26 @@ impl IsEvenApiBlockingClient {
     /// # Errors
     /// See [`IsEvenApiClient::get`] for a list of possible errors.
     pub fn get<T: Display>(&self, number: T) -> Result<IsEvenApiResponse, IsEvenApiError> {
-        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
-        let response = self.client.get(request_url).send()?;
+        let response = self.fetch_response(number)?;
         let status = response.status();
         parse_response(response.json()?, status)
+    }
+
+    /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    /// # Errors
+    ///
+    /// Unlike [`Self::get`], error responses will NOT be considered an error. Only request failures will be reported
+    /// as an error.
+    pub fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
+        let response = self.fetch_response(number)?;
+        Ok(response.text().expect("Unable to decode response body"))
+    }
+
+    /// Make the actual web request
+    fn fetch_response<T: Display>(&self, number: T) -> reqwest::Result<reqwest::blocking::Response> {
+        let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
+        debug!("Fetching API response from {}", request_url);
+        self.client.get(request_url).send()
     }
 }
 
