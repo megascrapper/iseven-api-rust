@@ -11,7 +11,17 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - name: Lint
@@ -25,7 +35,7 @@ jobs:
     - name: Save files
       uses: actions/upload-artifact@v4
       with:
-        name: iseven-api-rust
+        name: iseven_api-${{ matrix.target }}
         path: |
           target/release/iseven_api
           target/doc
