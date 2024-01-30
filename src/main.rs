@@ -22,6 +22,7 @@ fn print_error<T: Display>(msg: T) -> ! {
 }
 
 fn main() {
+    env_logger::init();
     let cli = Cli::parse();
     let num = cli.number;
     let client = IsEvenApiBlockingClient::new();
