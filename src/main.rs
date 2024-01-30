@@ -3,6 +3,7 @@ use std::{fmt::Display, process::exit};
 use clap::Parser;
 use iseven_api::IsEvenApiBlockingClient;
 
+/// Checks whether a number is even or odd using isEven API (https://isevenapi.xyz/).
 #[derive(Parser)]
 struct Cli {
     /// Number to check
