@@ -1,6 +1,7 @@
 use std::{fmt::Display, process::exit};
 
 use clap::Parser;
+use human_panic::setup_panic;
 use iseven_api::IsEvenApiBlockingClient;
 
 /// Checks whether a number is even or odd using isEven API (https://isevenapi.xyz/).
@@ -23,8 +24,10 @@ fn print_error<T: Display>(msg: T) -> ! {
 
 fn main() {
     env_logger::init();
+    setup_panic!();
     let cli = Cli::parse();
     let num = cli.number;
+
     let client = IsEvenApiBlockingClient::new();
     if cli.json {
         match client.get_json(&num) {
