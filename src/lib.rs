@@ -157,6 +157,11 @@ impl IsEvenApiClient {
     }
 
     /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    ///
+    /// # Errors
+    ///
+    /// Unlike [`Self::get`], error responses will NOT be considered an error. Only request failures will be reported
+    /// as an error.
     pub async fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
         let response = self.fetch_response(number).await?;
         Ok(response.text().await.expect("Unable to decode response body"))
@@ -234,6 +239,10 @@ impl IsEvenApiBlockingClient {
     }
 
     /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    /// # Errors
+    ///
+    /// Unlike [`Self::get`], error responses will NOT be considered an error. Only request failures will be reported
+    /// as an error.
     pub fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
         let response = self.fetch_response(number)?;
         Ok(response.text().expect("Unable to decode response body"))
