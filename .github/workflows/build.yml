@@ -23,7 +23,7 @@ jobs:
             os: windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Lint
       run: cargo clippy --all-features --release --verbose
     - name: Build
@@ -31,11 +31,11 @@ jobs:
     - name: Run tests
       run: cargo test --all-features --release --verbose
     - name: Build documentation
-      run: cargo doc --all-features --release --verbose
-    - name: Save files
       # temporary workaround due to issues with upload-artifact on windows
       # https://github.com/actions/upload-artifact/issues/485
       if: ${{ matrix.target != 'x86_64-pc-windows-msvc'}}
+      run: cargo doc --all-features --release --verbose
+    - name: Save files
       uses: actions/upload-artifact@v4
       with:
         name: iseven_api-${{ matrix.target }}
