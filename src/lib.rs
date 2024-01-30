@@ -156,6 +156,12 @@ impl IsEvenApiClient {
         parse_response(response.json().await?, status)
     }
 
+    /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    pub async fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
+        let response = self.fetch_response(number).await?;
+        Ok(response.text().await.expect("Unable to decode response body"))
+    }
+
     /// Make the actual web request
     async fn fetch_response<T: Display>(&self, number: T) -> reqwest::Result<Response> {
         let request_url = format!("{api_url}{num}", api_url = API_URL, num = number);
@@ -225,6 +231,12 @@ impl IsEvenApiBlockingClient {
         let response = self.fetch_response(number)?;
         let status = response.status();
         parse_response(response.json()?, status)
+    }
+
+    /// sends a GET request to the isEven API for a given number and returns its JSON response as a `String`.
+    pub fn get_json<T: Display>(&self, number: T) -> Result<String, IsEvenApiError> {
+        let response = self.fetch_response(number)?;
+        Ok(response.text().expect("Unable to decode response body"))
     }
 
     /// Make the actual web request
