@@ -1,6 +1,9 @@
 # iseven_api
 
-![Crates.io](https://img.shields.io/crates/v/iseven_api)
+[![Crates.io Version](https://img.shields.io/crates/v/iseven_api?style=flat-square)](https://crates.io/crates/iseven_api)
+[![Crates.io License](https://img.shields.io/crates/l/iseven_api?style=flat-square)](#license)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/megascrapper/iseven-api-rust/build.yml?style=flat-square)
+](https://github.com/megascrapper/iseven-api-rust/actions/workflows/build.yml)
 
 A Rust wrapper for [isEven API](https://isevenapi.xyz/).
 
