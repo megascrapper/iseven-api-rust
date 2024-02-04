@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "master", "gh-actions/**" ]
   pull_request:
-    branches: [ "master" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -50,9 +49,10 @@ jobs:
     - name: Build (aarch64-pc-windows-msvc)
       if: ${{ matrix.target == 'any-pc-windows-msvc' }}
       run: cargo build --all-features --release --verbose --target aarch64-pc-windows-msvc
-    - name: Run tests (aarch64-pc-windows-msvc)
-      if: ${{ matrix.target == 'any-pc-windows-msvc' }}
-      run: cargo test --all-features --release --verbose --target aarch64-pc-windows-msvc
+    # NOTE: x86_64 windows can't run arm64 executables
+    # - name: Run tests (aarch64-pc-windows-msvc)
+    #   if: ${{ matrix.target == 'any-pc-windows-msvc' }}
+    #   run: cargo test --all-features --release --verbose --target aarch64-pc-windows-msvc
     - name: Save files
       uses: actions/upload-artifact@v4
       with:
