@@ -1,0 +1,59 @@
+name: Build and test (Linux)
+
+on:
+  push:
+    branches: [ "master", "gh-actions/**" ]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    # runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            use_cross: false
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            use_cross: true
+          - target: armv7-unknown-linux-gnueabihf
+            os: ubuntu-latest
+            use_cross: true
+          - target: x86_64-apple-darwin
+            os: macos-14
+            use_cross: false
+          - target: aarch64-apple-darwin
+            os: macos-14
+            use_cross: false
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            use_cross: false
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            use_cross: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Add target
+      if: ${{ !matrix.use_cross }}
+      run: rustup target add ${{ matrix.target }}
+    - name: Lint
+      if: ${{ !matrix.use_cross }}
+      run: cargo clippy --all-features --release --target ${{ matrix.target }}
+    - name: Build
+      if: ${{ !matrix.use_cross }}
+      run: cargo build --all-features --release --target ${{ matrix.target }}
+    - name: Run tests
+      if: ${{ !matrix.use_cross && matrix.target != 'aarch64-pc-windows-msvc' }}
+      run: cargo test --all-features --release --target ${{ matrix.target }}
+    - name: Save files
+      uses: actions/upload-artifact@v4
+      with:
+        name: iseven_api-${{ matrix.target }}
+        path: |
+          target/**/release/iseven_api
+          target/**/release/iseven_api.exe
