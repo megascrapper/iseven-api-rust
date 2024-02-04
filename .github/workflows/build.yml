@@ -33,13 +33,13 @@ jobs:
     # target-specific steps
     # x86_64-apple-darwin
     - name: Add target (x86_64-apple-darwin)
-      if: ${{ matrix.target == '*-apple-darwin' }}
+      if: ${{ matrix.target == 'any-apple-darwin' }}
       run: rustup target install x86_64-apple-darwin
     - name: Build (x86_64-apple-darwin)
-      if: ${{ matrix.target == '*-apple-darwin' }}
+      if: ${{ matrix.target == 'any-apple-darwin' }}
       run: cargo build --all-features --release --verbose --target x86_64-apple-darwin
     - name: Run tests (x86_64-apple-darwin)
-      if: ${{ matrix.target == '*-apple-darwin' }}
+      if: ${{ matrix.target == 'any-apple-darwin' }}
       run: cargo test --all-features --release --verbose --target x86_64-apple-darwin
     # - name: Build documentation
     #   # temporary workaround due to issues with upload-artifact on windows
