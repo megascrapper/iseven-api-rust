@@ -22,9 +22,10 @@
 //! }
 //! ```
 //!
-//! # Crate features
+//! # Feature flags
 //! - **blocking** - Enables [`IsEvenApiBlockingClient`] which is a blocking alternative to [`IsEvenApiClient`]
 //! and does not require async runtime. It also enables 'convenience' functions [`is_odd`] and [`is_even`].
+//! - **cli** - Command line app. This feature does not add any extra library functionality.
 
 #![warn(missing_docs)]
 

@@ -11,6 +11,8 @@ Includes the library as well as a simple command-line front end.
 
 ## Command line app
 
+**Note:** using the CLI app requires activating the `cli` feature flag.
+
 ### Installation
 
 ```
