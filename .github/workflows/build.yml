@@ -69,5 +69,5 @@ jobs:
         with:
           name: iseven_api-${{ matrix.target }}
           path: |
-            target/${{ matrix.target }}/release/iseven_api
-            target/${{ matrix.target }}/release/iseven_api.exe
+            target/**/release/iseven_api
+            target/**/release/iseven_api.exe
